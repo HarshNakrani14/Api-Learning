@@ -31,7 +31,7 @@ function API3() {
                             <h2 className='text-2xl mb-2'>Type : {data.type}</h2>
                             <p className='text-lg'>Someone : {data.setup}</p>
                             <p className='text-lg'>Me : {data.punchline}</p>
-                            <p className='text-sm'>refresh for more jokes</p>
+                            <p className='text-sm mt-3'>refresh for more jokes</p>
                         </div>
                     </div>
                 ) : (
