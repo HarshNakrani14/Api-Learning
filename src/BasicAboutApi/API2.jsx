@@ -217,7 +217,7 @@ function API2() {
             Search for a movie to get started!
           </p>
         )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full max-w-screen-lg mx-auto px-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full max-w-screen-lg mx-auto px-4">
           {myData.map(({ imdbID, Poster, Title, Year }) => (
             <div
               key={imdbID}
@@ -247,7 +247,7 @@ function API2() {
             <div
               className={`p-6 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto relative ${
                 isDarkMode ? "bg-gray-800 text-white" : "bg-white text-black"
-              } scrollbar-hide`}
+              } scrollbar-hide flex flex-col items-center`}
             >
               <button
                 onClick={() => setSelectedMovie(null)} // Close modal
@@ -255,25 +255,26 @@ function API2() {
               >
                 X
               </button>
-              <h2 className="text-xl font-bold mb-2">
-                {selectedMovie.Title} ({selectedMovie.Year})
-              </h2>
+              <h2 className="text-xl font-bold mb-2 text-center">{selectedMovie.Title}</h2>
               <img
                 src={selectedMovie.Poster}
                 alt={selectedMovie.Title}
-                className="w-full rounded mb-4 object-fill"
+                className="mb-2 rounded-md w-full h-auto"
               />
-              <p>
-                <strong>Genre:</strong> {selectedMovie.Genre}
-              </p>
-              <p>
-                <strong>Director:</strong> {selectedMovie.Director}
-              </p>
-              <p>
+              <p className="text-center">
                 <strong>Plot:</strong> {selectedMovie.Plot}
               </p>
-              <p>
+              <p className="text-center">
+                <strong>Year:</strong> {selectedMovie.Year}
+              </p>
+              <p className="text-center">
+                <strong>Director:</strong> {selectedMovie.Director}
+              </p>
+              <p className="text-center">
                 <strong>Actors:</strong> {selectedMovie.Actors}
+              </p>
+              <p className="text-center">
+                <strong>Rating:</strong> {selectedMovie.imdbRating}
               </p>
             </div>
           </div>
