@@ -4,6 +4,7 @@ import { MoonIcon, SunIcon } from "@heroicons/react/24/outline";
 import "./style.css";
 
 const API_KEY = "6c3374b";
+const defaultMovie = "jurassic park";
 
 function API2() {
   const [myData, setMyData] = useState([]);
@@ -34,7 +35,7 @@ function API2() {
     const fetchDefaultMovie = async () => {
       try {
         const res = await axios.get(
-          `https://www.omdbapi.com/?s=titanic&apikey=${API_KEY}`
+          `https://www.omdbapi.com/?s=${defaultMovie}&apikey=${API_KEY}`
         );
         setMyData(res.data.Search || []);
       } catch (err) {
@@ -78,7 +79,7 @@ function API2() {
       }
     } else {
       // If query is empty, fetch the default movie
-      getApiData("titanic");
+      getApiData(defaultMovie);
     }
   }, []);
 
@@ -90,7 +91,7 @@ function API2() {
     setSearchTerm(e.target.value);
     // If the input is empty, trigger a search for the default movie
     if (e.target.value === "") {
-      getApiData("titanic");
+      getApiData(defaultMovie);
     }
   };
 
