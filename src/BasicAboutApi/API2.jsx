@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
+import { MoonIcon, SunIcon } from "@heroicons/react/24/outline";
 
 const API_KEY = "6c3374b";
 
@@ -8,9 +9,11 @@ function API2() {
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [selectedMovie, setSelectedMovie] = useState(null);
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1); // Track highlighted suggestion
+  let timeoutId;
 
   useEffect(() => {
-    // Fetch default movie data on first visit
     const fetchDefaultMovie = async () => {
       try {
         const res = await axios.get(`https://www.omdbapi.com/?s=titanic&apikey=${API_KEY}`);
@@ -44,16 +47,22 @@ function API2() {
     if (searchTerm.trim()) {
       getApiData(searchTerm);
       setSuggestions([]);
+      setHighlightedIndex(-1); // Reset highlighted index on search
     }
   };
 
   const handleInputChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
+    
+    clearTimeout(timeoutId);
     if (value.trim()) {
-      fetchSuggestions(value);
+      timeoutId = setTimeout(() => {
+        fetchSuggestions(value);
+      }, 300);
     } else {
       setSuggestions([]);
+      setHighlightedIndex(-1); // Reset highlighted index when input is cleared
     }
   };
 
@@ -64,7 +73,19 @@ function API2() {
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
-      handleSearch();
+      if (highlightedIndex >= 0 && highlightedIndex < suggestions.length) {
+        handleSuggestionClick(suggestions[highlightedIndex].Title);
+      } else {
+        handleSearch();
+      }
+    } else if (e.key === "ArrowDown") {
+      setHighlightedIndex((prevIndex) =>
+        prevIndex < suggestions.length - 1 ? prevIndex + 1 : prevIndex
+      );
+    } else if (e.key === "ArrowUp") {
+      setHighlightedIndex((prevIndex) =>
+        prevIndex > 0 ? prevIndex - 1 : prevIndex
+      );
     }
   };
 
@@ -77,88 +98,104 @@ function API2() {
     }
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
   return (
-    <div className="p-5 flex flex-col items-center">
-      <div className="flex flex-col mb-4 w-full max-w-md relative">
-        <input
-          type="text"
-          className="border border-gray-400 rounded-t-md p-2 w-full"
-          placeholder="Search for movies..."
-          value={searchTerm}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyPress}
-        />
-        <button
-          className="bg-blue-600 text-white rounded-b-md p-2 w-full"
-          onClick={handleSearch}
-        >
-          Search
-        </button>
+    <div className={`${isDarkMode ? "bg-gray-900 text-white" : "bg-white text-black"}`}>
+      <header className={`relative top-0 left-0 w-full p-5 flex flex-col items-center ${isDarkMode ? "bg-gray-900" : "bg-white"} z-10`}>
+        <h1 className={`text-3xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-black"}`}>
+          PlotPixel
+        </h1>
 
-        {suggestions.length > 0 && (
-          <ul className="absolute bg-white border border-gray-400 rounded-b-md w-full max-h-48 overflow-y-auto mt-20 z-10">
-            {suggestions.map((suggestion) => (
-              <li
-                key={suggestion.imdbID}
-                onClick={() => handleSuggestionClick(suggestion.Title)}
-                className="p-2 hover:bg-gray-200 cursor-pointer"
-              >
-                {suggestion.Title} ({suggestion.Year})
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {myData.length === 0 && (
-        <p className="text-gray-500 mt-6">Search for a movie to get started!</p>
-      )}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full max-w-screen-lg">
-        {myData.map((val) => {
-          const { imdbID, Poster, Title, Year } = val;
-
-          return (
-            <div 
-              key={imdbID} 
-              onClick={() => fetchMovieDetails(imdbID)} 
-              className="flex flex-col items-center bg-white rounded-lg p-4 shadow-lg transition-transform transform hover:scale-105 cursor-pointer"
-              style={{ 
-                background: "linear-gradient(to bottom right, rgba(255, 255, 255, 0.8), rgba(200, 200, 200, 0.6))", 
-                border: "1px solid rgba(0, 0, 0, 0.1)"
-              }}
-            >
-              <img 
-                src={Poster} 
-                className="h-72 w-full object-cover rounded-lg mb-2" 
-                alt={Title} 
-              />
-              <p className="text-center font-serif font-bold">{Title} ({Year})</p>
-            </div>
-          );
-        })}
-      </div>
-
-      {selectedMovie && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto relative">
+        <div className="flex flex-col items-center w-full max-w-md mb-4 relative">
+          <div className="flex w-full mb-2">
+            <input
+              type="text"
+              className={`border rounded-l-md p-2 w-full ${isDarkMode ? "border-gray-600 bg-gray-800 text-white" : "border-gray-400 bg-white text-black"}`}
+              placeholder="Search for movies..."
+              value={searchTerm}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyPress}
+            />
             <button
-              onClick={() => setSelectedMovie(null)}
-              className="absolute top-2 right-2 bg-red-600 text-white rounded-full px-2 py-1"
+              className={`rounded-r-md p-2 ${isDarkMode ? "bg-blue-600 text-white" : "bg-blue-600 text-white"} transition duration-200 hover:bg-blue-500`}
+              onClick={handleSearch}
             >
-              X
+              Search
             </button>
-            <h2 className="text-xl font-bold mb-2">{selectedMovie.Title} ({selectedMovie.Year})</h2>
-            <img src={selectedMovie.Poster} alt={selectedMovie.Title} className="w-full rounded mb-4" />
-            <p><strong>Genre:</strong> {selectedMovie.Genre}</p>
-            <p><strong>Director:</strong> {selectedMovie.Director}</p>
-            <p><strong>Plot:</strong> {selectedMovie.Plot}</p>
-            <p><strong>Actors:</strong> {selectedMovie.Actors}</p>
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 rounded-full ml-2 transition duration-200 hover:bg-gray-700"
+            >
+              {isDarkMode ? <SunIcon className="h-6 w-6 text-yellow-400" /> : <MoonIcon className="h-6 w-6 text-gray-800" />}
+            </button>
           </div>
+
+          {suggestions.length > 0 && (
+            <ul className={`absolute top-full left-0 w-[90%] max-w-md overflow-y-auto z-10 ${isDarkMode ? "bg-gray-800 text-white" : "bg-white text-black"} border border-gray-400 rounded-md`}>
+              {suggestions.map((suggestion, index) => (
+                <li
+                  key={suggestion.imdbID}
+                  onClick={() => handleSuggestionClick(suggestion.Title)}
+                  className={`p-2 hover:bg-gray-700 cursor-pointer ${isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-200"} ${highlightedIndex === index ? "bg-gray-700 text-white" : ""}`}
+                >
+                  {suggestion.Title} ({suggestion.Year})
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-      )}
+      </header>
+
+      <main className="pb-6">
+        {myData.length === 0 && (
+          <p className="text-gray-500 mt-6">Search for a movie to get started!</p>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full max-w-screen-lg mx-auto px-4">
+          {myData.map((val) => {
+            const { imdbID, Poster, Title, Year } = val;
+
+            return (
+              <div
+                key={imdbID}
+                onClick={() => fetchMovieDetails(imdbID)}
+                className={`flex flex-col items-center rounded-lg p-4 shadow-lg transition-transform transform hover:scale-105 cursor-pointer ${isDarkMode ? "bg-gray-800" : "bg-white"}`}
+              >
+                <img
+                  src={Poster}
+                  className="h-72 w-full object-fill rounded-lg mb-2"
+                  alt={Title}
+                />
+                <p className={`text-center font-serif font-bold ${isDarkMode ? "text-white" : "text-black"}`}>{Title} ({Year})</p>
+              </div>
+            );
+          })}
+        </div>
+
+        {selectedMovie && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4">
+            <div className={`p-6 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto relative ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}>
+              <button
+                onClick={() => setSelectedMovie(null)} // Close modal
+                className="absolute top-2 right-2 bg-red-600 text-white rounded-full px-2 py-1"
+              >
+                X
+              </button>
+              <h2 className="text-xl font-bold mb-2">{selectedMovie.Title} ({selectedMovie.Year})</h2>
+              <img src={selectedMovie.Poster} alt={selectedMovie.Title} className="w-full rounded mb-4 object-fill" />
+              <p><strong>Genre:</strong> {selectedMovie.Genre}</p>
+              <p><strong>Director:</strong> {selectedMovie.Director}</p>
+              <p><strong>Plot:</strong> {selectedMovie.Plot}</p>
+              <p><strong>Actors:</strong> {selectedMovie.Actors}</p>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
 
-export default API2;
+export default API2;  
